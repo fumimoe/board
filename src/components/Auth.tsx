@@ -22,6 +22,7 @@ import LockIcon from "@material-ui/icons/Lock";
 import AccountCircleIcon from "@material-ui/icons/AccountCircle";
 import Modal from "@material-ui/core/Modal";
 import Container from "@material-ui/core/Container";
+import { updateUserProfile } from "../features/userSlice";
 
 const useStyles = makeStyles((theme) => ({
   paper: {
@@ -45,21 +46,26 @@ const useStyles = makeStyles((theme) => ({
 
 export const Auth: React.FC = () => {
   const classes = useStyles();
+  const dispatch = useDispatch();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [isLogin, setIsLogin] = useState(true);
-  const [userName,setUserName] = useState('');
-//   <File | null>はファイル型かnullのどちらかが入ってくる
-  const [avatarImage,setAvatarImage] = useState<File | null>(null);
+  const [userName, setUserName] = useState("");
+  //   <File | null>はファイル型かnullのどちらかが入ってくる
+  const [avatarImage, setAvatarImage] = useState<File | null>(null);
 
-  const onChangeImageHandler = (e:React.ChangeEvent<HTMLInputElement>) => {
+  const onChangeImageHandler = (e: React.ChangeEvent<HTMLInputElement>) => {
     //   !をつける理由としてNon-null assertion operatorなのでこれは非nullでかつ非undefinedであること意味する
-    if(e.target.files![0]){
-        setAvatarImage(e.target.files![0]);
-        e.target.value ="";
+    if (e.target.files![0]) {
+      setAvatarImage(e.target.files![0]);
+      e.target.value = "";
     }
-  }
+  };
 
+    //   googleでログインする時の実装→エラーした時のみ実行する
+    const signInGoogle = async () => {
+        await auth.signInWithPopup(provider).catch((error) => alert(error.message));
+      };
 
   //   ログインする時の関数
   const SignInEmail = async () => {
@@ -68,29 +74,53 @@ export const Auth: React.FC = () => {
 
   //   新規ユーザーを作成する時
   const SignUpEmail = async () => {
-   const authUser =  await auth.createUserWithEmailAndPassword(email, password);
-   let url = "";
-   if(avatarImage){
-       
-    //    refとすることで階層を決めることができる
-    // この一文でfire sotorageにアップロードすることができる
-       await storage.ref(`avatars/${fileName}`).put(avatarImage);
-    //    下記一文でさっきアップロードした画像のURLを取り出すことができる
-       url = storage.ref("avatars").child(fileName).getDownloadURL()
-   }
-  };
+    const authUser = await auth.createUserWithEmailAndPassword(email, password);
+    let url = "";
+    if (avatarImage) {
+      const S =
+        "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789"; // 62文字
+      var N = 16;
+      // Uint32Arrayは符号なしの３２ビットで表現できる
+      const randomChar = Array.from(crypto.getRandomValues(new Uint32Array(N)))
+        .map((n) => S[n % S.length])
+        .join("");
+      const fileName = randomChar + "_" + avatarImage.name;
 
-  //   googleでログインする時の実装→エラーした時のみ実行する
-  const signInGoogle = async () => {
-    await auth.signInWithPopup(provider).catch((error) => alert(error.message));
-  };
+      //    refとすることで階層を決めることができる
+      // この一文でfire sotorageにアップロードすることができる
+      await storage.ref(`avatars/${fileName}`).put(avatarImage);
+      //    下記一文でさっきアップロードした画像のURLを取り出すことができる
+      url = await storage.ref("avatars").child(fileName).getDownloadURL();
+    }
+
+    // プロフィールを更新することができる→authUser.user?userオブジェクトがあれば追加で名前と写真を追加することができる
+    await authUser.user?.updateProfile({
+        displayName
+        : userName,
+        photoURL: url,
+      });
+      // その後dispatchでreduxstateを変更する
+      dispatch(
+        updateUserProfile({
+          displayName: userName,
+          photoURL: url,
+        })
+      );
+    };
+    
+
+  
+
+
 
   return (
     <Container component="main" maxWidth="xs">
       <CssBaseline />
 
       <div className={classes.paper}>
-       
+        <Avatar className={classes.avatar}>
+          <LockOutlinedIcon />
+        </Avatar>
         <Typography component="h1" variant="h5">
           {isLogin ? "signIn" : "SignUp"}
         </Typography>
@@ -156,21 +186,21 @@ export const Auth: React.FC = () => {
             {isLogin ? "signIn" : "SignUp"}
           </Button>
           <Grid container>
-              {/* xsでサイズを指定することができる→片方だけにxsを指定することで指定した方だけが全体を占めるので片方が右寄せになる */}
-          <Grid item xs>
-            <span className={styles.login_reset}></span>
-            
-                <span>パスワード忘れた方</span>
-              </Grid>
-              <Grid item >
-            {/* ボタンを押すたびにbooleanが反転する */}
-            <span
-              className={styles.login_toggleMode}
-              onClick={() => setIsLogin(!isLogin)}
-            >
-              
-                {isLogin ? "新しいアカウントを作成する" : "ログイン画面に戻る"}</span>
-              </Grid>
+            {/* xsでサイズを指定することができる→片方だけにxsを指定することで指定した方だけが全体を占めるので片方が右寄せになる */}
+            <Grid item xs>
+              <span className={styles.login_reset}></span>
+
+              <span>パスワード忘れた方</span>
+            </Grid>
+            <Grid item>
+              {/* ボタンを押すたびにbooleanが反転する */}
+              <span
+                className={styles.login_toggleMode}
+                onClick={() => setIsLogin(!isLogin)}
+              >
+                {isLogin ? "新しいアカウントを作成する" : "ログイン画面に戻る"}
+              </span>
+            </Grid>
           </Grid>
           <Button
             fullWidth
@@ -186,3 +216,4 @@ export const Auth: React.FC = () => {
     </Container>
   );
 };
+
