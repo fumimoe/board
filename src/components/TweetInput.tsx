@@ -3,7 +3,7 @@ import styles from "./TweetInput.module.css";
 import { useSelector } from "react-redux";
 import { selectCount } from "../features/userSlice";
 import { Avatar, Button, IconButton } from "@material-ui/core";
-import { auth, storage, db, FirebaseTimestamp } from "../firebase";
+import { auth, storage, db } from "../firebase";
 import AddAPhotoIcon from "@material-ui/icons/AddAPhoto";
 import firebase from "firebase/app";
 
@@ -22,11 +22,11 @@ const TweetInput = () => {
     }
   };
 
-  const sendTweet = async(e: React.FormEvent<HTMLFormElement>) => {
+  const sendTweet = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
 
     if (tweetImage) {
-        const S =
+      const S =
         "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789"; // 62文字
       var N = 16;
       // Uint32Arrayは符号なしの３２ビットで表現できる
@@ -39,50 +39,89 @@ const TweetInput = () => {
       uploadTweetImg.on(
         //   storgeに対してstateの変化があった時に動作する
         // 3つ引数を持つことができる
-        // ①進捗を確認するメソッド　()=>{},
+        // ①進捗を確認するメソッド()=>{},
         // ②errorが発生した時のメソッド
         // ③正常に処理が終了した時のメソッド
         firebase.storage.TaskEvent.STATE_CHANGED,
-        ()=>{},
+        () => {},
         (error) => {
-            alert(error.message)
+          alert(error.message);
         },
-        async() => {
-            // 画像をimagesから取得して対象のファイルを選択する（child）そのURLを取得してdbに保存する
-            await storage.ref('imgaes').child(fileName).getDownloadURL().then(async(url)=>{
-                await db.collection('posts').add({
-                    avatar: user.photoURL,
-                    image: url,
-                    text: tweetMsg,
-                    timestamp: FirebaseTimestamp,
-                    username: user.displayName,
-                })
-            })
+        async () => {
+          // 画像をimagesから取得して対象のファイルを選択する（child）そのURLを取得してdbに保存する
+          await storage
+            .ref("images")
+            .child(fileName)
+            .getDownloadURL()
+            .then(async (url) => {
+              console.log(url);
+              await db.collection("posts").add({
+                avatar: user.photoURL,
+                image: url,
+                text: tweetMsg,
+                timestamp: firebase.firestore.FieldValue.serverTimestamp(),
+                username: user.displayName,
+              });
+            });
         }
-      )
-
+      );
     } else {
       db.collection("posts").add({
         avatar: user.photoURL,
         image: "",
         text: tweetMsg,
-        timestamp: FirebaseTimestamp,
+        timestamp: firebase.firestore.FieldValue.serverTimestamp(),
         username: user.displayName,
       });
     }
     // これで初期化する
-    setTweetImage(null)
-    setTweetMsg("")
+    setTweetImage(null);
+    setTweetMsg("");
   };
 
   return (
-    <div>
-      <Avatar
-        className={styles.tweet_avatar}
-        src={user.photoURL}
-        onClick={async () => await auth.signOut()}
-      />
-    </div>
+    <>
+      <form onSubmit={sendTweet}>
+        <div className={styles.tweet_form}>
+          <Avatar
+            className={styles.tweet_avatar}
+            src={user.photoURL}
+            onClick={async () => await auth.signOut()}
+          />
+          <input
+            type="text"
+            className={styles.tweet_input}
+            placeholder="メッセージを入力"
+            value={tweetMsg}
+            onChange={(e) => setTweetMsg(e.target.value)}
+          />
+          <IconButton>
+            <label>
+              <AddAPhotoIcon
+                className={
+                  tweetImage ? styles.tweet_addIconLoaded : styles.tweet_addIcon
+                }
+              />
+              <input
+                className={styles.tweet_hiddenIcon}
+                type="file"
+                onChange={onChangeImageHandler}
+              />
+            </label>
+          </IconButton>
+        </div>
+        <Button
+          type="submit"
+          disabled={!tweetMsg}
+          // メッセージが入力されてない時のcssの切り替え
+          className={
+            tweetMsg ? styles.tweet_sendBtn : styles.tweet_sendDisableBtn
+          }
+        >
+          tweet
+        </Button>
+      </form>
+    </>
   );
 };
 

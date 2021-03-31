@@ -31,7 +31,7 @@ const App: React.FC = () => {
   }, [dispatch]);
 
   // ユーザーが存在してる時はFeadコンポーネントを表示する
-  return <>{user.uid ? <div className="styles.app"><Fead /></div> : <Auth />}</>;
+  return <>{user.uid ? <div className={styles.app}><Fead /></div> : <Auth />}</>;
 };
 
 export default App;
