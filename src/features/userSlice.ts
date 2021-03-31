@@ -18,7 +18,7 @@ export const userSlice = createSlice({
     logout: (state) => {
       state.user = { uid: "", photoURL: "", displayName: "" };
     },
-    updateUserProfile: (state, action: PayloadAction<USER>) => {
+    updateUserProfile: (state, action) => {
       state.user.displayName = action.payload.displayName;
       state.user.photoURL = action.payload.photoURL;
     },
