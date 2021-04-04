@@ -16,6 +16,10 @@ import { makeStyles } from "@material-ui/core/styles";
 import Container from "@material-ui/core/Container";
 import CameraIcon from "@material-ui/icons/Camera";
 import EmailIcon from "@material-ui/icons/Email";
+import { ChildCare } from "@material-ui/icons";
+import { updateUserProfile } from "../features/userSlice";
+import { useDispatch } from "react-redux";
+import { IconButton } from "@material-ui/core";
 
 const useStyles = makeStyles((theme) => ({
   paper: {
@@ -38,10 +42,21 @@ const useStyles = makeStyles((theme) => ({
 }));
 
 const AuthLog: React.FC = () => {
+  const dispatch = useDispatch();
+  const [userName, setUserName] = useState("");
+  const [avatarImage, setAvatarImage] = useState<File | null>(null);
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [isLogin, setIsLogin] = useState(true);
   const classes = useStyles();
+
+  const changeImageHandler = (e: React.ChangeEvent<HTMLInputElement>) => {
+    // [!]はnullでもundifindedでもない状態を表す→typescriptの表現
+    if (e.target.files![0]) {
+      setAvatarImage(e.target.files![0]);
+      e.target.value = "";
+    }
+  };
 
   const GoogleSing = async () => {
     await auth.signInWithPopup(provider).catch((error) => alert(error.message));
@@ -51,7 +66,25 @@ const AuthLog: React.FC = () => {
     await auth.signInWithEmailAndPassword(email, password);
   };
   const signUp = async () => {
-    await auth.createUserWithEmailAndPassword(email, password);
+    const authUser = await auth.createUserWithEmailAndPassword(email, password);
+    let url = "";
+
+    if (avatarImage) {
+      let S = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789";
+      let N = 16;
+      let randomName = Array.from(crypto.getRandomValues(new Uint32Array(N)))
+        .map((n) => S[n % S.length])
+        .join("");
+      let fileName = randomName + "_ " + avatarImage.name;
+      await storage.ref(`avatars/${fileName}`).put(avatarImage);
+      url = await storage.ref("avatars").child(fileName).getDownloadURL();
+    }
+    await authUser.user?.updateProfile({
+      displayName: userName,
+      photoURL: url,
+    });
+
+    dispatch(updateUserProfile({ photoURL: url, displayName: userName }));
   };
 
   return (
@@ -62,6 +95,41 @@ const AuthLog: React.FC = () => {
           {isLogin ? "サインイン" : "サインアップ"}
         </Typography>
         <form className={classes.form} noValidate>
+          {!isLogin && (
+            <>
+              <TextField
+                variant="outlined"
+                margin="normal"
+                required
+                fullWidth
+                id="username"
+                label="username"
+                name="username"
+                autoComplete="username"
+                autoFocus
+                value={userName}
+                onChange={(e: React.ChangeEvent<HTMLInputElement>) =>
+                  setUserName(e.target.value)
+                }
+              />
+              <Box textAlign="center">
+                <IconButton>
+                  <label>
+                    <Avatar
+                      className={
+                        avatarImage ? styles.login_addIconLoaded : styles.loginaddIcon
+                      }
+                    />
+                    <input
+                      type="file"
+                      className={styles.login_hiddenIcon}
+                      onChange={changeImageHandler}
+                    />
+                  </label>
+                </IconButton>
+              </Box>
+            </>
+          )}
           <TextField
             variant="outlined"
             margin="normal"
@@ -97,31 +165,35 @@ const AuthLog: React.FC = () => {
             label="Remember me"
           />
           <Button
+          disabled={isLogin? !email || password.length < 6 : !userName || !email || password.length < 6 || !avatarImage}
             fullWidth
             variant="contained"
             color="primary"
             className={classes.submit}
             startIcon={<EmailIcon />}
             onClick={
-                isLogin
-                  ? async () => {
-                      signLogin().catch((error) => alert(error.message));
-                    }
-                  : async () => {
-                      await signUp().catch((error) => alert(error.message));
-                    }
-              }
+              isLogin
+                ? async () => {
+                    signLogin().catch((error) => alert(error.message));
+                  }
+                : async () => {
+                    await signUp().catch((error) => alert(error.message));
+                  }
+            }
           >
-              {isLogin ? "サインイン" : "サインアップ"}
-            
+            {isLogin ? "サインイン" : "サインアップ"}
           </Button>
 
           <span>
-                <Grid container>
-                    <Grid item xs >パスワードを忘れた方</Grid>
-                    <Grid item xs onClick={() =>setIsLogin(!isLogin)}>{isLogin ? 'アカウントの新規作成':'ログインページに戻る'}</Grid>
-              
-              </Grid></span>
+            <Grid container>
+              <Grid item xs>
+                パスワードを忘れた方
+              </Grid>
+              <Grid item onClick={() => setIsLogin(!isLogin)}>
+                {isLogin ? "アカウントの新規作成" : "ログインページに戻る"}
+              </Grid>
+            </Grid>
+          </span>
 
           <Button
             fullWidth
@@ -133,8 +205,6 @@ const AuthLog: React.FC = () => {
           >
             google sign in
           </Button>
-
-          
         </form>
       </div>
       <Box mt={8}></Box>
