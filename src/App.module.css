@@ -1,6 +1,28 @@
 .App {
     display: flex;
     height: 100vh;
-    padding: 30px 80px;
+    /* padding: 30px 80px; */
     background-color: #c8c8d6;
   }
+
+  .button{
+    border: none;
+    background-color: rgb(41, 54, 236);
+    margin-left: 84%;
+    color: white;
+    border-radius: 20px;
+    padding: 10px 20px;
+    box-sizing: border-box;
+    font-weight: bold;
+}
+.button:hover{
+  background-color: whitesmoke;
+  opacity: 0.8;
+  cursor: pointer;
+  color: black;
+  font-weight: bold;
+}
+
+.bar{
+ background-color: rgba(39, 64, 145, 0.761);
+}

@@ -34,13 +34,23 @@ export const taskSlice = createSlice({
       // 新しいtasksを生成する
       state.tasks = [newTask, ...state.tasks];
     },
+    editTask:(state,action) => {
+      const task = state.tasks.find((t) => t.id === action.payload.id);
+      if(task){
+        task.title = action.payload.title
+      }
+
+    },
+    deleteTask:(state,action) => {
+        state.tasks = state.tasks.filter((t) => t.id !== action.payload.id)
+    }
    
 
   },
 });
 
-export const { createTask } = taskSlice.actions;
+export const { createTask,editTask,deleteTask } = taskSlice.actions;
 
 export const taskUser = (state: RootState): TaskState["tasks"] => state.task.tasks;
-
+export const selectSelectedTask = (state: RootState): TaskState["selectedTask"] => state.task.selectedTask;
 export default taskSlice.reducer;

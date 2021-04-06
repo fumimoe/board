@@ -88,6 +88,7 @@ const AuthLog: React.FC = () => {
   };
 
   return (
+    <div className={styles.root}>
     <Container component="main" maxWidth="xs">
       <CssBaseline />
       <div className={classes.paper}>
@@ -209,6 +210,7 @@ const AuthLog: React.FC = () => {
       </div>
       <Box mt={8}></Box>
     </Container>
+    </div>
   );
 };
 
