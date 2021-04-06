@@ -1,0 +1,32 @@
+.header{
+    width: 100%;
+    margin: auto;
+background-color: cornflowerblue;
+height: 60px;
+}
+
+.header_item{
+    width: 90vw;
+    display: flex;
+    justify-content: flex-end;
+    
+   
+}
+
+.button{
+    border: none;
+    margin-top: 10px;
+    background-color: rgb(41, 54, 236);
+    color: white;
+    border-radius: 20px;
+    padding:10px 20px;
+    box-sizing: border-box;
+    font-weight: bold;
+}
+.button:hover{
+  background-color: whitesmoke;
+  opacity: 0.8;
+  cursor: pointer;
+  color: black;
+  font-weight: bold;
+}

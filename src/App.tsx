@@ -9,7 +9,7 @@ import Feed from "./components/Feed";
 import AppBar from "@material-ui/core/AppBar";
 import Toolbar from "@material-ui/core/Toolbar";
 import { createStyles, makeStyles, Theme } from "@material-ui/core/styles";
-import { BrowserRouter as Router, Switch, Route, Link } from "react-router-dom";
+
 
 const useStyles = makeStyles((theme: Theme) =>
   createStyles({
@@ -46,23 +46,18 @@ const App: React.FC = () => {
   return (
     <div className={styles.App}>
       <div className={classes.root}>
-        {user.uid && (
+        {/* {user.uid && (
           <>
             <AppBar position="fixed" className={styles.bar}>
               <Toolbar>
-                <button
-                  className={styles.button}
-                  onClick={() =>
-                    auth.signOut().catch((error) => alert(error.message))
-                  }
-                >
-                  ログアウト
-                </button>
+                
               </Toolbar>
             </AppBar>
           </>
-        )}
 
+        )} */}
+
+       
         <div className={styles.text_container}>
           {user.uid ? <Feed /> : <AuthLog />}
         </div>
